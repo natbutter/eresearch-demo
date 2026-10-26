@@ -1,0 +1,60 @@
+MIT License (Code & Demo Application)
+=====================================
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+===============================================================================
+DATA & MODEL ATTRIBUTIONS
+===============================================================================
+
+The pre-indexed bibliographic metadata and abstract snippets in `corpus_data.js`
+and their corresponding vector embeddings in `semantic_engine.js` are derived
+from the following publicly available conference archives and open-source models.
+Original copyright in the individual abstracts, titles, and proceedings remains
+with their respective authors and publishers:
+
+1. eResearch Australasia Conference Corpus (2010–2026; 2,512 records)
+   - Source: Australasian eResearch Organisations (AeRO) / eResearch Australasia
+   - URL: https://conference.eresearch.edu.au/
+   - Legacy Archive: https://eresearchau.files.wordpress.com/
+   - Attribution: Titles, presenters, and abstract excerpts from the eResearch
+     Australasia conference programs (2010–2026).
+
+2. NeurIPS Proceedings Metadata (2010–2025; 26,987 records)
+   - Source: Neural Information Processing Systems (NeurIPS) Foundation
+   - URL: https://papers.nips.cc/ and https://neurips.cc/
+   - Attribution: Paper titles, author lists, years, and publication tracks
+     from the Advances in Neural Information Processing Systems proceedings.
+
+3. ACM/IEEE Supercomputing (SC) Proceedings Metadata (SC10–SC25; 2,279 records)
+   - Source: International Conference for High Performance Computing, Networking,
+     Storage, and Analysis (ACM / IEEE Computer Society) & DBLP Computer Science
+     Bibliography (https://dblp.org/, CC0 1.0 Public Domain Dedication)
+   - URL: https://sc25.supercomputing.org/ and https://dl.acm.org/conference/sc
+   - Attribution: Paper titles, author lists, publication years, tracks, and DOIs.
+
+4. Pre-trained Embedding Models & Software
+   - sentence-transformers/all-MiniLM-L6-v2 (Apache-2.0 License)
+     https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+   - Xenova/all-MiniLM-L6-v2 & Transformers.js by Hugging Face / Joshua Lochner (Apache-2.0 License)
+     https://huggingface.co/Xenova/all-MiniLM-L6-v2
+     https://github.com/xenova/transformers.js
+   - Inspired by SemanticFinder by Dominik Weckmüller (MIT License)
+     https://github.com/do-me/SemanticFinder
