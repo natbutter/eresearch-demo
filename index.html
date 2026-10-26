@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In-Browser Semantic Corpus Explorer — google/embeddinggemma-2 (31,778 Records)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --g-blue: #4285F4;
+      --g-blue-dark: #1A73E8;
+      --g-blue-tint: #E8F0FE;
+      --g-red: #EA4335;
+      --g-red-dark: #D93025;
+      --g-red-tint: #FCE8E6;
+      --g-yellow: #FBBC04;
+      --g-yellow-dark: #B06000;
+      --g-yellow-tint: #FEF7E0;
+      --g-green: #34A853;
+      --g-green-dark: #1E8E3E;
+      --g-green-tint: #E6F4EA;
+      --g-purple: #9334E6;
+      --g-purple-dark: #7627BB;
+      --g-purple-tint: #F3E8FD;
+      --g-cyan: #00ACC1;
+      --g-cyan-dark: #00838F;
+      --g-cyan-tint: #E0F7FA;
+      --bg-page: #F1F3F4;
+      --bg-slide: #FFFFFF;
+      --bg-card: #F8F9FA;
+      --bg-chip: #F1F3F4;
+      --text-main: #202124;
+      --text-sub: #5F6368;
+      --text-muted: #80868B;
+      --border-color: #DADCE0;
+      --shadow-card: 0 2px 6px rgba(60, 64, 67, 0.06), 0 1px 2px rgba(60, 64, 67, 0.04);
+      --shadow-deck: 0 12px 36px rgba(60, 64, 67, 0.14), 0 2px 8px rgba(60, 64, 67, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hud-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .hud-btn:hover {
+      background: var(--g-blue-tint);
+      border-color: var(--g-blue);
+      color: var(--g-blue-dark);
+    }
+
+    /* Main Viewport Container */
+    .deck-workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      overflow: hidden;
+    }
+
+    .slide-frame {
+      width: 100%;
+      max-width: 1640px;
+      height: 100%;
+      background: var(--bg-slide);
+      border-radius: 16px;
+      box-shadow: var(--shadow-deck);
+      border: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 4-Color Google Top Stripe */
+    .google-top-stripe {
+      height: 6px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      flex-shrink: 0;
+    }
+
+    .google-top-stripe div:nth-child(1) {
+      background: var(--g-blue);
+    }
+
+    .google-top-stripe div:nth-child(2) {
+      background: var(--g-red);
+    }
+
+    .google-top-stripe div:nth-child(3) {
+      background: var(--g-yellow);
+    }
+
+    .google-top-stripe div:nth-child(4) {
+      background: var(--g-green);
+    }
+
+    /* Slide Layout Internal Structure */
+    .slide {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 20px 32px 16px 32px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Body Grids */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .grid-chart-side {
+      display: grid;
+      grid-template-columns: 1.75fr 1fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Cards */
+    .g-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .g-card.white {
+      background: #FFFFFF;
+    }
+
+    .g-card.top-blue {
+      border-top: 4px solid var(--g-blue);
+    }
+
+    .card-kicker {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Exemplar Talk Citation Box */
+    .talk-quote {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--g-blue);
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-top: 0;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .talk-quote .tq-year {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--g-blue-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .talk-quote .tq-title {
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 3px 0 2px 0;
+    }
+
+    .talk-quote .tq-author {
+      color: var(--text-sub);
+      font-size: 11px;
+    }
+
+    .cos-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--g-purple-tint);
+      color: var(--g-purple-dark);
+      border: 1px solid #D1B8F6;
+    }
+
+    .cos-badge.exact {
+      background: var(--g-blue-tint);
+      color: var(--g-blue-dark);
+      border-color: #AECBFA;
+    }
+
+    /* Interactive Chart Containers */
+    .chart-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .chart-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .dataset-toggles {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ds-toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      border: 1.5px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-sub);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .ds-toggle-label input[type="checkbox"] {
+      cursor: pointer;
+      width: 13px;
+      height: 13px;
+    }
+
+    .ds-toggle-label.eres.checked {
+      background: var(--g-blue-tint);
+      border-color: var(--g-blue);
+      color: var(--g-blue-dark);
+    }
+
+    .ds-toggle-label.nips.checked {
+      background: var(--g-red-tint);
+      border-color: var(--g-red);
+      color: var(--g-red-dark);
+    }
+
+    .ds-toggle-label.sc.checked {
+      background: var(--g-green-tint);
+      border-color: var(--g-green);
+      color: var(--g-green-dark);
+    }
+
+    .ds-toggle-label.purple.checked {
+      background: var(--g-purple-tint);
+      border-color: var(--g-purple);
+      color: var(--g-purple-dark);
+    }
+
+    .pill-group {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pill-btn {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pill-btn:hover:not(:disabled) {
+      border-color: var(--g-blue);
+      color: var(--g-blue-dark);
+    }
+
+    .pill-btn.active {
+      background: var(--g-blue-tint);
+      border-color: var(--g-blue);
+      color: var(--g-blue-dark);
+    }
+
+    .pill-btn.mode-btn.active {
+      background: var(--g-purple-tint);
+      border-color: var(--g-purple);
+      color: var(--g-purple-dark);
+      font-weight: 700;
+    }
+
+    .pill-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .model-status-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--g-purple-tint);
+      color: var(--g-purple-dark);
+      border: 1px solid #D1B8F6;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .svg-stage {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      position: relative;
+    }
+
+    .svg-stage svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      height: 32px;
+      border-top: 1px solid var(--border-color);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-sub);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+
+    /* Floating Tooltip for Interactive Charts */
+    #chart-tooltip {
+      position: fixed;
+      pointer-events: none;
+      background: rgba(32, 33, 36, 0.96);
+      color: #FFFFFF;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      max-width: 360px;
+      z-index: 9999;
+      display: none;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+
+    /* Search Input Styling */
+    .live-search-input {
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1.5px solid var(--g-purple);
+      font-size: 13px;
+      width: 310px;
+      outline: none;
+      color: var(--text-main);
+    }
+
+    .live-search-input:focus {
+      box-shadow: 0 0 0 3px var(--g-purple-tint);
+    }
+
+    .search-results-list {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex: 1;
+      min-height: 0;
+      padding-right: 4px;
+    }
+
+    /* Embedding Model Switch (EmbeddingGemma-2 ⇄ all-MiniLM-L6-v2) */
+    .model-switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .model-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-chip);
+    }
+
+    .model-switch-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-sub);
+      padding: 0 4px 0 8px;
+    }
+
+    .model-switch-btn {
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-sub);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .model-switch-btn:hover:not(.active) {
+      background: #FFFFFF;
+      color: var(--g-blue-dark);
+    }
+
+    .model-switch-btn.active {
+      background: #FFFFFF;
+      border-color: var(--g-blue);
+      color: var(--g-blue-dark);
+      font-weight: 700;
+      box-shadow: var(--shadow-card);
+    }
+
+    .model-switch-btn .dim-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .model-switch-btn.active .dim-tag {
+      background: var(--g-blue-tint);
+      color: var(--g-blue-dark);
+      border-color: #AECBFA;
+    }
+
+    .model-status-pill.ready {
+      background: var(--g-green-tint);
+      color: var(--g-green-dark);
+      border-color: #A8DAB5;
+    }
+
+    .model-status-pill.error {
+      background: var(--g-red-tint);
+      color: var(--g-red-dark);
+      border-color: #F6AEA9;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="chart-tooltip"></div>
+
+  <div class="deck-workspace">
+    <main class="slide-stage">
+      <div class="slide-frame">
+        <div class="google-top-stripe">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- IN-BROWSER TRANSFORMERS.JS SEMANTIC EXPLORER (SemanticFinder style) -->
+        <!-- ================================================================= -->
+        <section class="slide">
+          <div class="slide-body">
+            <div class="grid-chart-side">
+              <div class="chart-box">
+                <div class="chart-toolbar">
+                  <!-- Row 1: Search Input + Dataset Checkboxes + In-Browser Model Status -->
+                  <div class="toolbar-row">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <input type="text" id="live-query-input" class="live-search-input" value="data mining"
+                        placeholder="Type any natural language query or concept..." oninput="scheduleSemanticSearch()">
+                      <div class="dataset-toggles">
+                        <label class="ds-toggle-label eres checked" id="lbl-ds-eres"
+                          title="Toggle eResearch Australasia dataset (2,512 talks, 2010–2026)">
+                          <input type="checkbox" id="chk-ds-eres" checked onchange="onDatasetToggle()"
+                            style="accent-color:var(--g-blue-dark);">
+                          🔵 eResearch (2,512)
+                        </label>
+                        <label class="ds-toggle-label nips checked" id="lbl-ds-nips"
+                          title="Toggle NeurIPS dataset (26,987 papers, 2010–2025)">
+                          <input type="checkbox" id="chk-ds-nips" checked onchange="onDatasetToggle()"
+                            style="accent-color:var(--g-red-dark);">
+                          🔴 NeurIPS (26,987)
+                        </label>
+                        <label class="ds-toggle-label sc checked" id="lbl-ds-sc"
+                          title="Toggle ACM/IEEE Supercomputing dataset (2,279 papers, SC10–SC25)">
+                          <input type="checkbox" id="chk-ds-sc" checked onchange="onDatasetToggle()"
+                            style="accent-color:var(--g-green-dark);">
+                          🟢 Supercomputing (2,279)
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Embedding Model Switch (default: EmbeddingGemma-2) + In-Browser Model Status -->
+                    <div class="model-switch-wrap">
+                      <div class="model-switch" role="group" aria-label="Embedding model">
+                        <span class="model-switch-label">Model</span>
+                        <button type="button" class="model-switch-btn active" id="model-btn-gemma" aria-pressed="true"
+                          onclick="setEmbeddingModel('gemma')"
+                          title="google/embeddinggemma-2 — 768-D document vectors (gemma_embeddings.js) + in-browser onnx-community/embeddinggemma-2-ONNX query encoder (q4 on WebGPU, fp16 on WASM)">
+                          💎 EmbeddingGemma-2 <span class="dim-tag">768-D</span>
+                        </button>
+                        <button type="button" class="model-switch-btn" id="model-btn-minilm" aria-pressed="false"
+                          onclick="setEmbeddingModel('minilm')"
+                          title="sentence-transformers/all-MiniLM-L6-v2 — 384-D document vectors (semantic_engine.js) + in-browser Xenova/all-MiniLM-L6-v2 (q8) query encoder">
+                          ⚡ MiniLM-L6-v2 <span class="dim-tag">384-D</span>
+                        </button>
+                      </div>
+                      <span class="model-status-pill" id="model-status-badge"
+                        title="Runs google/embeddinggemma-2 (onnx-community/embeddinggemma-2-ONNX, 270M text encoder) directly in your browser via Transformers.js v4">
+                        ⏳ Loading google/embeddinggemma-2...
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Row 2: Mode Selector + Cosine Similarity Slider + Exact Overlay + Live Stats -->
+                  <div class="toolbar-row">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="pill-group">
+                        <!-- <button class="pill-btn mode-btn active" id="mode-hybrid" onclick="setSearchMode('hybrid')"
+                          title="Combines 384-D Neural Cosine Similarity (Xenova/all-MiniLM-L6-v2) + Exact Substring Matches">
+                          ⚡ Hybrid (all-MiniLM-L6-v2 + Exact)
+                        </button> -->
+                        <button class="pill-btn mode-btn active" id="mode-semantic" onclick="setSearchMode('semantic')"
+                          title="Pure 768-D Neural Embedding Cosine Similarity via google/embeddinggemma-2">
+                          🧠 Pure Neural (<span id="mode-semantic-model">EmbeddingGemma-2</span>)
+                        </button>
+                        <button class="pill-btn mode-btn" id="mode-exact" onclick="setSearchMode('exact')"
+                          title="Classic literal substring match">
+                          🎯 Exact Keyword
+                        </button>
+                      </div>
+
+                      <label id="vec-thresh-wrap"
+                        style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--g-purple-dark);background:var(--g-purple-tint);padding:4px 10px;border-radius:999px;border:1px solid #D1B8F6;"
+                        title="Minimum 768-D cosine similarity score to count a talk/paper as a semantic match on the trajectory chart">
+                        Cosine ≥ <span id="vec-thresh-val" style="font-family:'JetBrains Mono',monospace;">0.72</span>
+                        <input type="range" id="vec-thresh-slider" min="0.60" max="0.85" step="0.01" value="0.72"
+                          style="width:80px;accent-color:var(--g-purple);cursor:pointer;"
+                          oninput="onThresholdChange(this.value)">
+                      </label>
+
+                      <label class="ds-toggle-label purple checked" id="lbl-overlay-exact"
+                        style="font-size:11px;padding:4px 9px;"
+                        title="Overlay dashed lines showing the literal Exact Keyword % alongside the solid Neural Semantic %">
+                        <input type="checkbox" id="chk-overlay-exact" checked onchange="onOverlayToggle()"
+                          style="accent-color:var(--g-purple);">
+                        📉 Overlay Exact Baseline
+                      </label>
+                    </div>
+
+                    <span id="live-query-stats" style="font-size:11.5px;font-weight:600;color:var(--text-main);"></span>
+                  </div>
+                </div>
+
+                <div class="svg-stage" id="chart-live-query"></div>
+              </div>
+
+              <div class="g-card top-blue white" style="overflow:hidden;">
+                <div
+                  style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                  <span class="card-kicker" style="color:var(--g-blue-dark);margin-bottom:0;">Semantic Ranking &amp;
+                    Provenance Inspector</span>
+                  <div class="pill-group" id="live-res-tabs">
+                    <button class="pill-btn active" id="tab-res-all" onclick="setLiveResultTab('all')">All</button>
+                    <button class="pill-btn" id="tab-res-eres" onclick="setLiveResultTab('eres')">🔵 eRes</button>
+                    <button class="pill-btn" id="tab-res-nips" onclick="setLiveResultTab('nips')">🔴 NeurIPS</button>
+                    <button class="pill-btn" id="tab-res-sc" onclick="setLiveResultTab('sc')">🟢 SC</button>
+                  </div>
+                </div>
+                <div class="card-title">
+                  <span id="live-matches-header">Matching Records</span>
+                  <select id="sort-select" onchange="renderLiveMatchList()"
+                    style="font-size:11px;padding:2px 6px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-sub);font-weight:600;cursor:pointer;">
+                    <option value="similarity">Sort: Cosine Similarity ↓</option>
+                    <option value="year_desc">Sort: Newest First</option>
+                    <option value="year_asc">Sort: Oldest First</option>
+                  </select>
+                </div>
+                <div class="search-results-list" id="live-matches-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="slide-footer">
+          <div><strong>In-Browser Semantic Explorer</strong> • Powered by <code>@huggingface/transformers</code>
+            (<span id="footer-model-info"><code>google/embeddinggemma-2</code> • <code>onnx-community/embeddinggemma-2-ONNX</code>, 768-D</span>)</div>
+          <div>31,778 Pre-Indexed Records (eResearch • NeurIPS • Supercomputing) • Press <code>/</code> to Search</div>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- Pre-computed Corpus Metadata -->
+  <!-- Document embeddings are lazy-loaded per model by ensureEmbeddings(): -->
+  <!--   gemma_embeddings.js (768-D google/embeddinggemma-2) • semantic_engine.js (384-D all-MiniLM-L6-v2) -->
+  <script src="corpus_data.js"></script>
+
+  <!-- Main Application Logic -->
+  <script>
+    const NEURIPS_PARADIGMS = [
+      "P1: Classical Statistical ML (Kernels, Sparsity & Graphical)",
+      "P2: Optimization, Learning Theory & Bandits",
+      "P3: Wave-1 Deep Learning (CNNs, RNNs, GANs & Vision)",
+      "P4: Reinforcement Learning, Control & Game Theory",
+      "P5: Transformers, Self-Attention & Representation Learning",
+      "P6: Foundation Models, LLMs, Diffusion & Efficient Systems",
+      "P7: AI for Science, Graphs, Trust & Benchmarks"
+    ];
+
+    const SC_PARADIGMS = [
+      "P1: Exascale Architectures, Manycore CPUs & Green/Liquid HPC",
+      "P2: GPU Accelerators, CUDA, Tensor Cores & Heterogeneous Kernels",
+      "P3: High-Speed Interconnects, MPI, RDMA & Network Topologies",
+      "P4: Parallel Storage (Lustre/GPFS), I/O, NVMe & Lossy Compression",
+      "P5: Numerical Solvers, Sparse Linear Algebra, Stencils & Resilience",
+      "P6: Programming Models (OpenMP/Kokkos), Compilers & Workflows",
+      "P7: AI-HPC Convergence, Distributed LLMs & Quantum Simulation"
+    ];
+
+    window.searchMode = 'semantic'; // 'hybrid' | 'semantic' | 'exact'
+    window.activeModel = 'gemma'; // 'gemma' (google/embeddinggemma-2, default) | 'minilm' (all-MiniLM-L6-v2)
+    window.vecThreshold = 0.72;
+    window.currentResTab = 'all';
+    window.renderLimit = 120;
+    window.currentQueryVec = null;
+
+    // =========================================================================
+    // EMBEDDING MODEL REGISTRY — EmbeddingGemma-2 (768-D, default) ⇄ all-MiniLM-L6-v2 (384-D)
+    // Each model has its own pre-computed Int8 document matrices (lazy-loaded <script>), in-browser
+    // query encoder (Transformers.js module at the bottom), query-vector cache & cosine threshold.
+    // NOTE: don't declare GEMMA_* / MINILM_* globals here — the lazy-loaded embedding scripts own them.
+    // =========================================================================
+    const MODEL_CFG = {
+      gemma: {
+        short: 'EmbeddingGemma-2',
+        hfId: 'google/embeddinggemma-2',
+        onnxId: 'onnx-community/embeddinggemma-2-ONNX',
+        badgeName: 'google/embeddinggemma-2',
+        badgeTitle: 'Runs google/embeddinggemma-2 (onnx-community/embeddinggemma-2-ONNX, 270M text encoder) directly in your browser via Transformers.js v4',
+        footerHtml: '<code>google/embeddinggemma-2</code> • <code>onnx-community/embeddinggemma-2-ONNX</code>, 768-D',
+        dim: 768,
+        script: 'gemma_embeddings.js', // built by build_gemma_embeddings.py
+        // Official EmbeddingGemma 2 SearchQuery instruction prefix (documents were embedded as "title: … | text: …")
+        queryPrompt: 'task: search result | query: ',
+        // Calibrated to EmbeddingGemma-2's compressed cosine range (per-query corpus medians ≈ 0.60–0.67)
+        thresh: 0.72, threshMin: 0.60, threshMax: 0.85,
+        b64: () => [
+          typeof ERES_GEMMA_B64 !== 'undefined' ? ERES_GEMMA_B64 : '',
+          typeof NIPS_GEMMA_B64 !== 'undefined' ? NIPS_GEMMA_B64 : '',
+          typeof SC_GEMMA_B64 !== 'undefined' ? SC_GEMMA_B64 : ''
+        ]
+      },
+      minilm: {
+        short: 'all-MiniLM-L6-v2',
+        hfId: 'sentence-transformers/all-MiniLM-L6-v2',
+        onnxId: 'Xenova/all-MiniLM-L6-v2',
+        badgeName: 'Xenova/all-MiniLM-L6-v2',
+        badgeTitle: 'Runs Xenova/all-MiniLM-L6-v2 directly in your browser via Transformers.js (ONNX Runtime Web) just like SemanticFinder',
+        footerHtml: '<code>Xenova/all-MiniLM-L6-v2</code>, 384-D ONNX',
+        dim: 384,
+        script: 'semantic_engine.js', // built by build_minilm_embeddings.py
+        queryPrompt: '',
+        thresh: 0.36, threshMin: 0.20, threshMax: 0.70,
+        b64: () => [
+          typeof ERES_MINILM_B64 !== 'undefined' ? ERES_MINILM_B64 : '',
+          typeof NIPS_MINILM_B64 !== 'undefined' ? NIPS_MINILM_B64 : '',
+          typeof SC_MINILM_B64 !== 'undefined' ? SC_MINILM_B64 : ''
+        ],
+        // Runs once semantic_engine.js has loaded
+        onLoaded: (cfg) => {
+          // Pre-populate queryVecCache with fallback 384-D vectors so initial load is 0ms
+          // Object.entries(MINILM_FALLBACK_QUERIES || {}).forEach(([k, b64]) => {
+          //   const i8 = decodeInt8B64(b64);
+          //   const f32 = new Float32Array(MINILM_DIM);
+          //   let normSq = 0;
+          //   for (let d = 0; d < MINILM_DIM; d++) {
+          //     f32[d] = i8[d] / 127.0;
+          //     normSq += f32[d] * f32[d];
+          //   }
+          //   const scale = 1.0 / (Math.sqrt(normSq) * 127.0);
+          //   for (let d = 0; d < MINILM_DIM; d++) f32[d] *= scale;
+          //   cfg.cache.set(k, f32);
+          // });
+        }
+      }
+    };
+
+    // Per-model runtime state
+    Object.entries(MODEL_CFG).forEach(([key, cfg]) => Object.assign(cfg, {
+      key,
+      mats: null,                     // { eres, nips, sc } Int8Array document matrices once decoded
+      embLoading: null,               // Promise while the embeddings <script> is loading
+      embError: null,
+      embed: null,                    // async (text) => Float32Array, installed by the Transformers.js module
+      status: 'idle',                 // query encoder: 'idle' | 'loading' | 'ready' | 'error'
+      progress: 0,
+      device: '',
+      lastMs: null,
+      cache: new Map(),               // lowercased query -> L2-normalized query vector pre-divided by 127
+      inferChain: Promise.resolve()
+    }));
+
+    // Decode Base64 Int8 Document Embedding Matrices (once per model, after its script loads)
+    function decodeInt8B64(b64) {
+      if (!b64) return new Int8Array(0);
+      const bin = atob(b64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      return new Int8Array(bytes.buffer);
+    }
+
+    function decodeModelMatrices(cfg) {
+      const [eresB64, nipsB64, scB64] = cfg.b64();
+      const mats = { eres: decodeInt8B64(eresB64), nips: decodeInt8B64(nipsB64), sc: decodeInt8B64(scB64) };
+      // Rows must line up 1-to-1 with corpus_data.js, otherwise similarities would point at the wrong records
+      const expected = { eres: SEARCH_INDEX.length, nips: NEURIPS_INDEX.length, sc: SC_INDEX.length };
+      Object.keys(expected).forEach(ds => {
+        const rows = mats[ds].length / cfg.dim;
+        if (rows !== expected[ds]) {
+          throw new Error(`${cfg.script} has ${rows} ${ds} vectors but corpus_data.js has ${expected[ds]} records — re-run its build script`);
+        }
+      });
+      return mats;
+    }
+
+    // Lazy-load a model's pre-computed document embeddings (<script> injection also works over file://)
+    function ensureEmbeddings(key) {
+      const cfg = MODEL_CFG[key];
+      if (cfg.mats) return Promise.resolve();
+      if (cfg.embLoading) return cfg.embLoading;
+      cfg.embError = null;
+      cfg.embLoading = new Promise((resolve, reject) => {
+        if (cfg.b64()[0]) return resolve(); // already loaded (e.g. by a static <script> tag)
+        const s = document.createElement('script');
+        s.src = cfg.script;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error(`could not fetch ${cfg.script}`));
+        document.body.appendChild(s);
+      }).then(() => {
+        cfg.mats = decodeModelMatrices(cfg);
+        if (cfg.onLoaded) cfg.onLoaded(cfg);
+      }).catch(err => {
+        console.error(`${cfg.short} document embeddings error:`, err);
+        cfg.embError = err;
+        cfg.embLoading = null; // allow a retry on the next toggle
+      }).finally(() => {
+        if (window.activeModel === key) {
+          renderModelBadge();
+          runLiveCorpusQuery();
+        }
+      });
+      return cfg.embLoading;
+    }
+
+    function renderModelBadge() {
+      const badge = document.getElementById('model-status-badge');
+      if (!badge) return;
+      const cfg = MODEL_CFG[window.activeModel];
+      let text = `⏳ Loading ${cfg.badgeName}...`;
+      let state = '';
+      if (cfg.embError) {
+        text = `⚠️ ${cfg.script} Load Error`;
+        state = 'error';
+      } else if (cfg.status === 'error') {
+        text = `⚠️ ${cfg.badgeName} Load Error`;
+        state = 'error';
+      } else if (!cfg.mats) {
+        text = `⏳ Loading ${cfg.dim}-D ${cfg.short} document vectors...`;
+      } else if (cfg.status === 'ready') {
+        text = cfg.lastMs !== null
+          ? `🟢 ${cfg.badgeName} (${cfg.dim}-D • ${cfg.lastMs}ms)`
+          : `🟢 ${cfg.badgeName} Ready (${cfg.dim}-D • ${cfg.device})`;
+        state = 'ready';
+      } else if (cfg.progress > 0) {
+        text = `⏳ Loading ${cfg.short} (${cfg.progress}%)...`;
+      }
+      badge.textContent = text;
+      badge.title = cfg.badgeTitle;
+      badge.classList.toggle('ready', state === 'ready');
+      badge.classList.toggle('error', state === 'error');
+    }
+
+    function currentQueryString() {
+      return (document.getElementById('live-query-input')?.value || '').trim().toLowerCase();
+    }
+
+    // L2-normalize the first `dim` values and pre-divide by 127 so dot(query, Int8 doc vector) = cosine in [-1, 1]
+    function toScaledQueryVec(raw, dim) {
+      let normSq = 0;
+      for (let d = 0; d < dim; d++) normSq += raw[d] * raw[d];
+      const invNorm = normSq > 0 ? (1.0 / (Math.sqrt(normSq) * 127.0)) : (1.0 / 127.0);
+      const scaled = new Float32Array(dim);
+      for (let d = 0; d < dim; d++) scaled[d] = raw[d] * invNorm;
+      return scaled;
+    }
+
+    // One query embedding at a time per model (no overlapping ONNX Runtime session runs); queued
+    // queries that went stale while waiting (user kept typing or switched models) are skipped
+    function embedQuery(cfg, rawQ) {
+      const job = cfg.inferChain.catch(() => null).then(async () => {
+        if (window.activeModel !== cfg.key || currentQueryString() !== rawQ) return null;
+        const t0 = performance.now();
+        const raw = await cfg.embed(cfg.queryPrompt + rawQ);
+        cfg.lastMs = Math.round(performance.now() - t0);
+        const scaled = toScaledQueryVec(raw, cfg.dim);
+        cfg.cache.set(rawQ, scaled);
+        return scaled;
+      });
+      cfg.inferChain = job;
+      return job;
+    }
+
+    // Model toggle: swaps document matrices, query encoder, cosine range & labels
+    function setEmbeddingModel(key) {
+      if (!Object.hasOwn(MODEL_CFG, key)) return;
+      const cfg = MODEL_CFG[key];
+      window.activeModel = key;
+
+      Object.keys(MODEL_CFG).forEach(k => {
+        const btn = document.getElementById('model-btn-' + k);
+        if (!btn) return;
+        btn.classList.toggle('active', k === key);
+        btn.setAttribute('aria-pressed', String(k === key));
+      });
+
+      // Each model has its own calibrated cosine range; restore its last-used threshold
+      window.vecThreshold = cfg.thresh;
+      const slider = document.getElementById('vec-thresh-slider');
+      if (slider) {
+        slider.min = cfg.threshMin; // set min/max before value so the old range doesn't clamp it
+        slider.max = cfg.threshMax;
+        slider.value = cfg.thresh;
+      }
+      document.getElementById('vec-thresh-val').textContent = cfg.thresh.toFixed(2);
+      document.getElementById('vec-thresh-wrap').title = `Minimum ${cfg.dim}-D cosine similarity score to count a talk/paper as a semantic match on the trajectory chart`;
+      document.getElementById('mode-semantic-model').textContent = cfg.short;
+      document.getElementById('mode-semantic').title = `Pure ${cfg.dim}-D Neural Embedding Cosine Similarity via ${cfg.hfId}`;
+      document.getElementById('footer-model-info').innerHTML = cfg.footerHtml;
+      document.title = `In-Browser Semantic Corpus Explorer — ${cfg.badgeName} (31,778 Records)`;
+
+      // Query vectors live in model-specific embedding spaces — never reuse them across models
+      window.currentQueryVec = null;
+      window.renderLimit = 120;
+      renderModelBadge();
+
+      ensureEmbeddings(key);
+      if (typeof window.loadEmbeddingModel === 'function') window.loadEmbeddingModel(key);
+      executeQueryPipeline();
+    }
+
+    // Tooltip Helper
+    const tooltip = document.getElementById('chart-tooltip');
+    function showTip(evt, html) {
+      tooltip.innerHTML = html;
+      tooltip.style.display = 'block';
+      const x = Math.min(window.innerWidth - 370, evt.clientX + 14);
+      const y = Math.min(window.innerHeight - 160, evt.clientY - 10);
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    }
+    function hideTip() {
+      tooltip.style.display = 'none';
+    }
+
+    let debounceTimer = null;
+    function scheduleSemanticSearch() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        window.renderLimit = 120;
+        executeQueryPipeline();
+      }, 90);
+    }
+
+    function setSearchMode(mode) {
+      window.searchMode = mode;
+      window.renderLimit = 120;
+      ['semantic', 'exact'].forEach(m => {
+        document.getElementById('mode-' + m)?.classList.toggle('active', m === mode);
+      });
+      const threshWrap = document.getElementById('vec-thresh-wrap');
+      if (threshWrap) {
+        threshWrap.style.opacity = (mode === 'exact') ? '0.35' : '1';
+      }
+      runLiveCorpusQuery();
+    }
+
+    function onThresholdChange(val) {
+      window.vecThreshold = parseFloat(val);
+      MODEL_CFG[window.activeModel].thresh = window.vecThreshold; // remembered per model
+      document.getElementById('vec-thresh-val').textContent = window.vecThreshold.toFixed(2);
+      runLiveCorpusQuery();
+    }
+
+    function onOverlayToggle() {
+      const chk = document.getElementById('chk-overlay-exact')?.checked ?? true;
+      document.getElementById('lbl-overlay-exact')?.classList.toggle('checked', chk);
+      runLiveCorpusQuery();
+    }
+
+    function onDatasetToggle() {
+      const showEres = document.getElementById('chk-ds-eres')?.checked ?? true;
+      const showNips = document.getElementById('chk-ds-nips')?.checked ?? true;
+      const showSc = document.getElementById('chk-ds-sc')?.checked ?? true;
+
+      document.getElementById('lbl-ds-eres')?.classList.toggle('checked', showEres);
+      document.getElementById('lbl-ds-nips')?.classList.toggle('checked', showNips);
+      document.getElementById('lbl-ds-sc')?.classList.toggle('checked', showSc);
+
+      if (window.currentResTab === 'eres' && !showEres) window.currentResTab = 'all';
+      if (window.currentResTab === 'nips' && !showNips) window.currentResTab = 'all';
+      if (window.currentResTab === 'sc' && !showSc) window.currentResTab = 'all';
+
+      runLiveCorpusQuery();
+    }
+
+    function setLiveResultTab(tab) {
+      window.currentResTab = tab;
+      window.renderLimit = 120;
+      ['all', 'eres', 'nips', 'sc'].forEach(t => {
+        const el = document.getElementById('tab-res-' + t);
+        if (el) el.classList.toggle('active', t === tab);
+      });
+      renderLiveMatchList();
+    }
+
+    function loadMoreResults() {
+      window.renderLimit += 200;
+      renderLiveMatchList();
+    }
+
+    // Compute Query Embedding for the active model via In-Browser Transformers.js (or instant cache)
+    async function executeQueryPipeline() {
+      const key = window.activeModel;
+      const cfg = MODEL_CFG[key];
+      const rawQ = currentQueryString();
+      if (!rawQ) {
+        window.currentQueryVec = null;
+        runLiveCorpusQuery();
+        return;
+      }
+
+      // Check cache first (per model — 768-D and 384-D vectors are not interchangeable)
+      if (cfg.cache.has(rawQ)) {
+        window.currentQueryVec = cfg.cache.get(rawQ);
+        runLiveCorpusQuery();
+        return;
+      }
+
+      // If the active model's in-browser query encoder is ready, embed live in browser!
+      if (cfg.embed) {
+        try {
+          const scaled = await embedQuery(cfg, rawQ);
+          // Drop stale results (query edited or model switched while inference was queued/running)
+          if (!scaled || window.activeModel !== key || currentQueryString() !== rawQ) return;
+          window.currentQueryVec = scaled;
+          renderModelBadge();
+          runLiveCorpusQuery();
+          return;
+        } catch (err) {
+          console.error(`${cfg.short} inference error:`, err);
+        }
+      }
+
+      // Fallback while model is still downloading on first visit: average any matching cached query vectors
+      if (!cfg.cache.has(rawQ)) {
+        const dim = cfg.dim;
+        const accum = new Float32Array(dim);
+        let hits = 0;
+        for (const [k, v] of cfg.cache.entries()) {
+          if (rawQ.includes(k) || k.includes(rawQ)) {
+            for (let d = 0; d < dim; d++) accum[d] += v[d];
+            hits++;
+          }
+        }
+        if (hits > 0) {
+          let normSq = 0;
+          for (let d = 0; d < dim; d++) normSq += accum[d] * accum[d];
+          const scale = 1.0 / (Math.sqrt(normSq) * 127.0);
+          for (let d = 0; d < dim; d++) accum[d] *= scale;
+          window.currentQueryVec = accum;
+        }
+        runLiveCorpusQuery();
+      }
+    }
+
+    // =========================================================================
+    // LIVE COSINE SIMILARITY SCAN (768-D EmbeddingGemma-2 or 384-D MiniLM) & TRAJECTORY PLOTTER (31,778 RECORDS)
+    // =========================================================================
+    function runLiveCorpusQuery() {
+      const inputEl = document.getElementById('live-query-input');
+      const qStr = ((inputEl ? inputEl.value : '') || '').trim().toLowerCase();
+      const exactTerms = qStr.split('|').map(t => t.trim()).filter(Boolean);
+
+      const showEres = document.getElementById('chk-ds-eres')?.checked ?? true;
+      const showNips = document.getElementById('chk-ds-nips')?.checked ?? true;
+      const showSc = document.getElementById('chk-ds-sc')?.checked ?? true;
+      const overlayExact = document.getElementById('chk-overlay-exact')?.checked ?? true;
+      const mode = window.searchMode || 'semantic';
+      const cfg = MODEL_CFG[window.activeModel];
+      const vecThresh = window.vecThreshold || cfg.thresh;
+
+      const maxYear = showEres ? 2026 : 2025;
+      const years = BUNDLE.years.filter(y => y <= maxYear);
+
+      // Active model's Int8 document matrices (null until its embeddings script has loaded)
+      const VEC_DIM = cfg.dim;
+      const eresMat = cfg.mats ? cfg.mats.eres : null;
+      const nipsMat = cfg.mats ? cfg.mats.nips : null;
+      const scMat = cfg.mats ? cfg.mats.sc : null;
+
+      const qVec = window.currentQueryVec;
+      const hasVec = !!qVec && !!cfg.mats && qVec.length === VEC_DIM && mode !== 'exact';
+
+      const eresSemCnt = {}, eresExactCnt = {}, eresTot = {};
+      const nipsSemCnt = {}, nipsExactCnt = {}, nipsTot = {};
+      const scSemCnt = {}, scExactCnt = {}, scTot = {};
+      years.forEach(y => {
+        eresSemCnt[y] = 0; eresExactCnt[y] = 0; eresTot[y] = 0;
+        nipsSemCnt[y] = 0; nipsExactCnt[y] = 0; nipsTot[y] = 0;
+        scSemCnt[y] = 0; scExactCnt[y] = 0; scTot[y] = 0;
+      });
+
+      const eresMatches = [], nipsMatches = [], scMatches = [];
+
+      if (exactTerms.length > 0) {
+        // 1. Scan eResearch (2,512 talks, 2010–2026)
+        if (showEres) {
+          for (let idx = 0; idx < SEARCH_INDEX.length; idx++) {
+            const rec = SEARCH_INDEX[idx];
+            if (rec.y > maxYear) continue;
+            eresTot[rec.y] = (eresTot[rec.y] || 0) + 1;
+
+            const ft = rec.ft || '';
+            const exactHit = exactTerms.some(t => ft.includes(t));
+            if (exactHit) eresExactCnt[rec.y] += 1;
+
+            let cosSim = 0;
+            if (hasVec) {
+              const off = idx * VEC_DIM;
+              for (let d = 0; d < VEC_DIM; d++) {
+                cosSim += qVec[d] * eresMat[off + d];
+              }
+            }
+            const vecHit = hasVec && (cosSim >= vecThresh);
+
+            const isMatched = (mode === 'exact') ? exactHit
+              : (mode === 'semantic') ? vecHit
+                : (vecHit || exactHit);
+
+            if (isMatched) {
+              eresSemCnt[rec.y] += 1;
+              eresMatches.push({
+                ...rec,
+                exactHit,
+                cosSim,
+                score: mode === 'semantic' ? cosSim : (cosSim + (exactHit ? 0.25 : 0)),
+                _ds: 'eres'
+              });
+            }
+          }
+        }
+
+        // 2. Scan NeurIPS (26,987 papers, 2010–2025)
+        if (showNips) {
+          for (let idx = 0; idx < NEURIPS_INDEX.length; idx++) {
+            const item = NEURIPS_INDEX[idx];
+            const [yr, title, auth, track, pid] = item;
+            if (nipsTot[yr] !== undefined) nipsTot[yr] += 1;
+
+            const tLow = title.toLowerCase();
+            const exactHit = exactTerms.some(t => tLow.includes(t));
+            if (exactHit && nipsExactCnt[yr] !== undefined) nipsExactCnt[yr] += 1;
+
+            let cosSim = 0;
+            if (hasVec) {
+              const off = idx * VEC_DIM;
+              for (let d = 0; d < VEC_DIM; d++) {
+                cosSim += qVec[d] * nipsMat[off + d];
+              }
+            }
+            const vecHit = hasVec && (cosSim >= vecThresh);
+
+            const isMatched = (mode === 'exact') ? exactHit
+              : (mode === 'semantic') ? vecHit
+                : (vecHit || exactHit);
+
+            if (isMatched) {
+              if (nipsSemCnt[yr] !== undefined) nipsSemCnt[yr] += 1;
+              nipsMatches.push({
+                y: yr, t: title, p: auth, track, c: pid,
+                exactHit, cosSim,
+                score: mode === 'semantic' ? cosSim : (cosSim + (exactHit ? 0.25 : 0)),
+                _ds: 'nips'
+              });
+            }
+          }
+        }
+
+        // 3. Scan Supercomputing SC10–SC25 (2,279 papers, 2010–2025)
+        if (showSc) {
+          for (let idx = 0; idx < SC_INDEX.length; idx++) {
+            const item = SC_INDEX[idx];
+            const [yr, title, auth, track, pid, doi] = item;
+            if (scTot[yr] !== undefined) scTot[yr] += 1;
+
+            const tLow = title.toLowerCase();
+            const exactHit = exactTerms.some(t => tLow.includes(t));
+            if (exactHit && scExactCnt[yr] !== undefined) scExactCnt[yr] += 1;
+
+            let cosSim = 0;
+            if (hasVec) {
+              const off = idx * VEC_DIM;
+              for (let d = 0; d < VEC_DIM; d++) {
+                cosSim += qVec[d] * scMat[off + d];
+              }
+            }
+            const vecHit = hasVec && (cosSim >= vecThresh);
+
+            const isMatched = (mode === 'exact') ? exactHit
+              : (mode === 'semantic') ? vecHit
+                : (vecHit || exactHit);
+
+            if (isMatched) {
+              if (scSemCnt[yr] !== undefined) scSemCnt[yr] += 1;
+              scMatches.push({
+                y: yr, t: title, p: auth, track, c: pid, doi,
+                exactHit, cosSim,
+                score: mode === 'semantic' ? cosSim : (cosSim + (exactHit ? 0.25 : 0)),
+                _ds: 'sc'
+              });
+            }
+          }
+        }
+      }
+
+      window.lastTriMatches = { eres: eresMatches, nips: nipsMatches, sc: scMatches, q: qStr };
+
+      // Update Result Inspector Tab Buttons
+      const totalCombined = eresMatches.length + nipsMatches.length + scMatches.length;
+      const tabAll = document.getElementById('tab-res-all');
+      const tabEres = document.getElementById('tab-res-eres');
+      const tabNips = document.getElementById('tab-res-nips');
+      const tabSc = document.getElementById('tab-res-sc');
+
+      tabAll.textContent = `All (${totalCombined.toLocaleString()})`;
+      tabEres.textContent = `🔵 eRes (${eresMatches.length.toLocaleString()})`;
+      tabNips.textContent = `🔴 NeurIPS (${nipsMatches.length.toLocaleString()})`;
+      tabSc.textContent = `🟢 SC (${scMatches.length.toLocaleString()})`;
+
+      tabEres.disabled = !showEres;
+      tabNips.disabled = !showNips;
+      tabSc.disabled = !showSc;
+
+      ['all', 'eres', 'nips', 'sc'].forEach(t => {
+        const el = document.getElementById('tab-res-' + t);
+        if (el) el.classList.toggle('active', t === window.currentResTab);
+      });
+
+      // Build Stats Line
+      const totalEresExact = Object.values(eresExactCnt).reduce((a, b) => a + b, 0);
+      const totalNipsExact = Object.values(nipsExactCnt).reduce((a, b) => a + b, 0);
+      const totalScExact = Object.values(scExactCnt).reduce((a, b) => a + b, 0);
+
+      const statParts = [];
+      if (showEres) {
+        const sub = mode !== 'exact' ? ` <span style="color:var(--text-sub);font-weight:500;">(${totalEresExact} exact)</span>` : '';
+        statParts.push(`<span style="color:var(--g-blue-dark);">🔵 eResearch: <strong>${eresMatches.length.toLocaleString()}</strong>${sub}</span>`);
+      }
+      if (showNips) {
+        const sub = mode !== 'exact' ? ` <span style="color:var(--text-sub);font-weight:500;">(${totalNipsExact} exact)</span>` : '';
+        statParts.push(`<span style="color:var(--g-red-dark);">🔴 NeurIPS: <strong>${nipsMatches.length.toLocaleString()}</strong>${sub}</span>`);
+      }
+      if (showSc) {
+        const sub = mode !== 'exact' ? ` <span style="color:var(--text-sub);font-weight:500;">(${totalScExact} exact)</span>` : '';
+        statParts.push(`<span style="color:var(--g-green-dark);">🟢 Supercomputing: <strong>${scMatches.length.toLocaleString()}</strong>${sub}</span>`);
+      }
+      document.getElementById('live-query-stats').innerHTML = statParts.join(' &nbsp;•&nbsp; ');
+
+      renderLiveMatchList();
+      renderLiveTrajectoryChart(years, qStr, {
+        showEres, showNips, showSc, overlayExact: overlayExact && mode !== 'exact',
+        eresSemCnt, eresExactCnt, eresTot,
+        nipsSemCnt, nipsExactCnt, nipsTot,
+        scSemCnt, scExactCnt, scTot,
+        eresMatchesLen: eresMatches.length,
+        nipsMatchesLen: nipsMatches.length,
+        scMatchesLen: scMatches.length
+      });
+    }
+
+    function renderLiveTrajectoryChart(years, qStr, d) {
+      const modelLabel = MODEL_CFG[window.activeModel].short;
+      const container = document.getElementById('chart-live-query');
+      const W = container.clientWidth || 720;
+      const H = container.clientHeight || 310;
+      const pad = { t: 32, r: 24, b: 38, l: 48 };
+      const plotW = W - pad.l - pad.r;
+      const plotH = H - pad.t - pad.b;
+
+      const eresSemPcts = years.map(y => d.eresTot[y] ? Math.round((1000 * d.eresSemCnt[y]) / d.eresTot[y]) / 10 : null);
+      const eresExactPcts = years.map(y => d.eresTot[y] ? Math.round((1000 * d.eresExactCnt[y]) / d.eresTot[y]) / 10 : null);
+      const nipsSemPcts = years.map(y => d.nipsTot[y] ? Math.round((1000 * d.nipsSemCnt[y]) / d.nipsTot[y]) / 10 : null);
+      const nipsExactPcts = years.map(y => d.nipsTot[y] ? Math.round((1000 * d.nipsExactCnt[y]) / d.nipsTot[y]) / 10 : null);
+      const scSemPcts = years.map(y => d.scTot[y] ? Math.round((1000 * d.scSemCnt[y]) / d.scTot[y]) / 10 : null);
+      const scExactPcts = years.map(y => d.scTot[y] ? Math.round((1000 * d.scExactCnt[y]) / d.scTot[y]) / 10 : null);
+
+      const activeVals = [];
+      if (d.showEres) {
+        eresSemPcts.forEach(v => { if (v !== null) activeVals.push(v); });
+        if (d.overlayExact) eresExactPcts.forEach(v => { if (v !== null) activeVals.push(v); });
+      }
+      if (d.showNips) {
+        nipsSemPcts.forEach(v => { if (v !== null) activeVals.push(v); });
+        if (d.overlayExact) nipsExactPcts.forEach(v => { if (v !== null) activeVals.push(v); });
+      }
+      if (d.showSc) {
+        scSemPcts.forEach(v => { if (v !== null) activeVals.push(v); });
+        if (d.overlayExact) scExactPcts.forEach(v => { if (v !== null) activeVals.push(v); });
+      }
+
+      const maxY = Math.max(6, ...activeVals) * 1.18;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}">`;
+      [0, 0.25, 0.5, 0.75, 1].forEach(f => {
+        const val = Math.round(maxY * f * 10) / 10;
+        const y = pad.t + plotH * (1 - f);
+        svg += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="#DADCE0" stroke-dasharray="3,3"/>`;
+        svg += `<text x="${pad.l - 8}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="#5F6368">${val}%</text>`;
+      });
+
+      const xPos = i => pad.l + (i / Math.max(1, years.length - 1)) * plotW;
+      const yPos = v => pad.t + plotH - (v / maxY) * plotH;
+
+      const drawSeries = (pcts, col, dash, width, opacity, tipFn, showLabels) => {
+        const validPts = [];
+        pcts.forEach((v, i) => {
+          if (v !== null) validPts.push({ x: xPos(i), y: yPos(v), v, yr: years[i], i });
+        });
+        if (!validPts.length) return;
+        const pathD = validPts.map((p, idx) => `${idx === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+        svg += `<path d="${pathD}" fill="none" stroke="${col}" stroke-width="${width}" stroke-opacity="${opacity}" ${dash ? `stroke-dasharray="${dash}"` : ''}/>`;
+        validPts.forEach(p => {
+          const tip = tipFn(p.yr, p.v);
+          const safeTip = tip.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          svg += `<circle cx="${p.x}" cy="${p.y}" r="${dash ? 3.2 : 4.3}" fill="${col}" fill-opacity="${opacity}" stroke="#FFF" stroke-width="1.2"
+        onmousemove="showTip(event, '${safeTip}')" onmouseleave="hideTip()" style="cursor:pointer;"/>`;
+          if (showLabels && p.v > 0) {
+            svg += `<text x="${p.x}" y="${p.y - 7}" text-anchor="middle" font-size="9" font-weight="700" fill="${col}">${p.v}%</text>`;
+          }
+        });
+      };
+
+      const singleDatasetOnly = ((d.showEres ? 1 : 0) + (d.showNips ? 1 : 0) + (d.showSc ? 1 : 0)) === 1;
+
+      if (d.showEres) {
+        if (d.overlayExact) {
+          drawSeries(
+            eresExactPcts,
+            '#00ACC1',
+            '4,4',
+            1.8,
+            0.55,
+            (yr, v) => `<strong>${yr} — eResearch Exact Keyword Baseline</strong><br>Query <code>&quot;${qStr}&quot;</code><br>Exact Matches: <strong>${d.eresExactCnt[yr]} / ${d.eresTot[yr]} (${v}%)</strong><br>Semantic Matches: <strong>${d.eresSemCnt[yr]} (${eresSemPcts[years.indexOf(yr)]}%)</strong>`,
+            false
+          );
+        }
+        drawSeries(
+          eresSemPcts,
+          '#00ACC1',
+          '',
+          2.6,
+          1.0,
+          (yr, v) => `<strong>${yr} — eResearch Semantic (${modelLabel})</strong><br>Query <code>&quot;${qStr}&quot;</code><br>Semantic Talks: <strong>${d.eresSemCnt[yr]} / ${d.eresTot[yr]} (${v}%)</strong><br>Exact Keyword Talks: <strong>${d.eresExactCnt[yr]} (${eresExactPcts[years.indexOf(yr)]}%)</strong>`,
+          singleDatasetOnly
+        );
+      }
+
+      if (d.showNips) {
+        if (d.overlayExact) {
+          drawSeries(
+            nipsExactPcts,
+            '#EA4335',
+            '4,4',
+            1.8,
+            0.55,
+            (yr, v) => `<strong>${yr} — NeurIPS Exact Keyword Baseline</strong><br>Query <code>&quot;${qStr}&quot;</code><br>Exact Papers: <strong>${d.nipsExactCnt[yr]} / ${d.nipsTot[yr]} (${v}%)</strong><br>Semantic Papers: <strong>${d.nipsSemCnt[yr]} (${nipsSemPcts[years.indexOf(yr)]}%)</strong>`,
+            false
+          );
+        }
+        drawSeries(
+          nipsSemPcts,
+          '#EA4335',
+          '',
+          2.6,
+          1.0,
+          (yr, v) => `<strong>${yr} — NeurIPS Semantic (${modelLabel})</strong><br>Query <code>&quot;${qStr}&quot;</code><br>Semantic Papers: <strong>${d.nipsSemCnt[yr]} / ${d.nipsTot[yr]} (${v}%)</strong><br>Exact Keyword Papers: <strong>${d.nipsExactCnt[yr]} (${nipsExactPcts[years.indexOf(yr)]}%)</strong>`,
+          singleDatasetOnly
+        );
+      }
+
+      if (d.showSc) {
+        if (d.overlayExact) {
+          drawSeries(
+            scExactPcts,
+            '#34A853',
+            '4,4',
+            1.8,
+            0.55,
+            (yr, v) => `<strong>${yr} — Supercomputing Exact Keyword Baseline</strong><br>Query <code>&quot;${qStr}&quot;</code><br>Exact Papers: <strong>${d.scExactCnt[yr]} / ${d.scTot[yr]} (${v}%)</strong><br>Semantic Papers: <strong>${d.scSemCnt[yr]} (${scSemPcts[years.indexOf(yr)]}%)</strong>`,
+            false
+          );
+        }
+        drawSeries(
+          scSemPcts,
+          '#34A853',
+          '',
+          2.6,
+          1.0,
+          (yr, v) => `<strong>${yr} — Supercomputing Semantic (${modelLabel})</strong><br>Query <code>&quot;${qStr}&quot;</code><br>Semantic Papers: <strong>${d.scSemCnt[yr]} / ${d.scTot[yr]} (${v}%)</strong><br>Exact Keyword Papers: <strong>${d.scExactCnt[yr]} (${scExactPcts[years.indexOf(yr)]}%)</strong>`,
+          singleDatasetOnly
+        );
+      }
+
+      years.forEach((yr, i) => {
+        const x = xPos(i);
+        svg += `<text x="${x}" y="${H - 12}" text-anchor="middle" font-size="10.5" font-weight="600" fill="#202124">${yr}</text>`;
+      });
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    function renderRecordCard(m) {
+      const cosStr = m.cosSim > 0 ? `${(m.cosSim * 100).toFixed(1)}% cosine` : '';
+      const badge = m.exactHit
+        ? `<span class="cos-badge exact">🎯 Exact${cosStr ? ' • ' + cosStr : ''}</span>`
+        : `<span class="cos-badge">🧠 ${cosStr}</span>`;
+
+      if (m._ds === 'eres') {
+        const urlLink = m.url ? ` • <a href="${m.url}" target="_blank" style="color:var(--g-blue-dark);text-decoration:underline;">Source URL ↗</a>` : '';
+        return `
+    <div class="talk-quote" style="border-left-color:#00ACC1">
+      <div class="tq-year">
+        <span>[eResearch ${m.y}]${urlLink}</span>
+        ${badge}
+      </div>
+      <div class="tq-title">${m.t}</div>
+      <div class="tq-author">${m.p || 'eResearch Presenter'} (${BUNDLE.paradigm_names[m.c]})</div>
+    </div>`;
+      } else if (m._ds === 'nips') {
+        const pName = NEURIPS_PARADIGMS[m.c] || 'NeurIPS Track';
+        return `
+    <div class="talk-quote" style="border-left-color:#EA4335;">
+      <div class="tq-year" style="color:#D93025;">
+        <span>[NeurIPS ${m.y}] • ${m.track} Track • ${pName.split(':')[0]}</span>
+        ${badge}
+      </div>
+      <div class="tq-title">${m.t}</div>
+      <div class="tq-author">${m.p || 'NeurIPS Authors'} (${pName})</div>
+    </div>`;
+      } else {
+        const pName = SC_PARADIGMS[m.c] || 'Supercomputing Track';
+        const doiLink = m.doi ? ` • <a href="https://doi.org/${m.doi}" target="_blank" style="color:var(--g-blue-dark);text-decoration:underline;">DOI: ${m.doi} ↗</a>` : '';
+        return `
+    <div class="talk-quote" style="border-left-color:#34A853;">
+      <div class="tq-year" style="color:#1E8E3E;">
+        <span>[SC ${m.y}] • ${m.track}${doiLink}</span>
+        ${badge}
+      </div>
+      <div class="tq-title">${m.t}</div>
+      <div class="tq-author">${m.p || 'ACM/IEEE Supercomputing Authors'} (${pName})</div>
+    </div>`;
+      }
+    }
+
+    function renderLiveMatchList() {
+      const tab = window.currentResTab || 'all';
+      const sortMode = document.getElementById('sort-select')?.value || 'similarity';
+      const { eres, nips, sc, q } = window.lastTriMatches || { eres: [], nips: [], sc: [], q: '' };
+      const listEl = document.getElementById('live-matches-list');
+      const hdr = document.getElementById('live-matches-header');
+
+      let pool = [];
+      if (tab === 'eres') {
+        pool = eres.slice();
+        hdr.textContent = `${eres.length.toLocaleString()} eResearch Records`;
+      } else if (tab === 'nips') {
+        pool = nips.slice();
+        hdr.textContent = `${nips.length.toLocaleString()} NeurIPS Papers`;
+      } else if (tab === 'sc') {
+        pool = sc.slice();
+        hdr.textContent = `${sc.length.toLocaleString()} Supercomputing Papers`;
+      } else {
+        pool = [...eres, ...sc, ...nips];
+        hdr.textContent = `${pool.length.toLocaleString()} Total Matching Records`;
+      }
+
+      if (sortMode === 'similarity') {
+        pool.sort((a, b) => (b.score - a.score) || (b.y - a.y));
+      } else if (sortMode === 'year_desc') {
+        pool.sort((a, b) => (b.y - a.y) || (b.score - a.score));
+      } else {
+        pool.sort((a, b) => (a.y - b.y) || (b.score - a.score));
+      }
+
+      const limit = window.renderLimit || 120;
+      const shown = pool.slice(0, limit);
+      let html = shown.map(renderRecordCard).join('');
+
+      if (pool.length > limit) {
+        html += `
+      <button class="hud-btn" style="justify-content:center;margin-top:4px;padding:8px;" onclick="loadMoreResults()">
+        Show More Results (Showing ${limit.toLocaleString()} of ${pool.length.toLocaleString()})
+      </button>
+    `;
+      } else if (pool.length === 0) {
+        const cfg = MODEL_CFG[window.activeModel];
+        const neural = window.searchMode !== 'exact';
+        const exactHint = `(or switch to <strong>🎯 Exact Keyword</strong> mode)`;
+        let msg = `No records matched <code>"${q}"</code> above Cosine ≥ ${window.vecThreshold.toFixed(2)}. Try lowering the Cosine slider!`;
+        if (neural && cfg.embError) {
+          msg = `⚠️ Could not load <code>${cfg.script}</code>: ${cfg.embError.message} ${exactHint}.`;
+        } else if (neural && !cfg.mats) {
+          msg = `⏳ Loading pre-computed ${cfg.dim}-D <code>${cfg.hfId}</code> document embeddings (<code>${cfg.script}</code>) ${exactHint}...`;
+        } else if (neural && q && !window.currentQueryVec) {
+          msg = cfg.status === 'error'
+            ? `⚠️ In-browser <code>${cfg.badgeName}</code> query encoder failed to load — see the browser console ${exactHint}.`
+            : `⏳ Waiting for in-browser <code>${cfg.badgeName}</code> model to finish loading ${exactHint}...`;
+        }
+        html = `<div style="font-size:12.5px;color:var(--text-sub);padding:12px;">${msg}</div>`;
+      }
+
+      listEl.innerHTML = html;
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', e => {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+        if (e.key === 'Escape') document.activeElement.blur();
+        return;
+      }
+      if (e.key === '/') { e.preventDefault(); document.getElementById('live-query-input').focus(); }
+    });
+
+    window.addEventListener('resize', () => runLiveCorpusQuery());
+
+    // Default embedding model: EmbeddingGemma-2 (open with ?model=minilm to start on all-MiniLM-L6-v2)
+    const requestedModel = new URLSearchParams(window.location.search).get('model');
+    setEmbeddingModel(requestedModel && Object.hasOwn(MODEL_CFG, requestedModel) ? requestedModel : 'gemma');
+  </script>
+
+  <!-- In-Browser HuggingFace Transformers.js v4 Module (SemanticFinder architecture) -->
+  <!-- Query encoders load on demand: EmbeddingGemma 2 (270M text encoder; q4 on WebGPU, fp16 on WASM) ⇄ all-MiniLM-L6-v2 (q8) -->
+  <script type="module">
+    const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1';
+
+    // The Cache API (window.caches) only exists in secure contexts (https:// or http://localhost); over plain
+    // http:// to any other host it's undefined, so Transformers.js must not be told to use it
+    async function canUseBrowserCache() {
+      if (typeof caches === 'undefined') return false;
+      try {
+        await caches.open('transformers-cache');
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    let libPromise = null;
+    function loadTransformers() {
+      if (!libPromise) {
+        libPromise = Promise.all([import(TRANSFORMERS_URL), canUseBrowserCache()])
+          .then(([lib, hasCache]) => {
+            lib.env.allowLocalModels = false;
+            lib.env.useBrowserCache = hasCache;
+            lib.env.useWasmCache = hasCache;
+            return lib;
+          })
+          .catch((err) => {
+            libPromise = null; // allow a retry on the next model toggle
+            throw err;
+          });
+      }
+      return libPromise;
+    }
+
+    // Prefer WebGPU only when an adapter is actually available (navigator.gpu can exist without one)
+    async function pickDevice() {
+      try {
+        if (navigator.gpu && await navigator.gpu.requestAdapter()) return 'webgpu';
+      } catch (err) {
+        console.warn('WebGPU adapter request failed, using WASM:', err);
+      }
+      return 'wasm';
+    }
+
+    // Each loader resolves to { embed: async (text) => Float32Array, device }
+    const LOADERS = {
+      // google/embeddinggemma-2 via onnx-community/embeddinggemma-2-ONNX (768-D sentence_embedding)
+      async gemma(progress_callback) {
+        const { AutoConfig, AutoModel, AutoTokenizer } = await loadTransformers();
+        const MODEL_ID = MODEL_CFG.gemma.onnxId;
+        const config = await AutoConfig.from_pretrained(MODEL_ID);
+        // Selective encoder loading: disable vision & audio encoders to load the 270M text encoder only
+        config.vision_config = null;
+        config.audio_config = null;
+
+        const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
+        // The q4 (175 MB) and q8 exports embed tokens with GatherBlockQuantized, which ONNX Runtime only implements
+        // on WebGPU. WASM — the only backend over plain http:// to a non-localhost host — needs fp16 (542 MB)
+        const dtypeFor = (dev) => (dev === 'webgpu' ? 'q4' : 'fp16');
+        let device = await pickDevice();
+        let model;
+        try {
+          model = await AutoModel.from_pretrained(MODEL_ID, { config, device, dtype: dtypeFor(device), progress_callback });
+        } catch (err) {
+          if (device === 'wasm') throw err;
+          console.warn('EmbeddingGemma-2 WebGPU load failed, retrying on WASM (fp16):', err);
+          device = 'wasm';
+          model = await AutoModel.from_pretrained(MODEL_ID, { config, device, dtype: dtypeFor(device), progress_callback });
+        }
+        return {
+          device: `${device} ${dtypeFor(device)}`,
+          embed: async (text) => {
+            const inputs = await tokenizer([text], { padding: true, truncation: true });
+            const { sentence_embedding } = await model(inputs);
+            return sentence_embedding.data; // Float32Array(768)
+          }
+        };
+      },
+
+      // sentence-transformers/all-MiniLM-L6-v2 via Xenova/all-MiniLM-L6-v2 (384-D, mean pooling + L2 norm)
+      async minilm(progress_callback) {
+        const { pipeline } = await loadTransformers();
+        // q8 = the same quantized ONNX weights the original @xenova/transformers v2 page used (quantized: true)
+        const extractor = await pipeline('feature-extraction', MODEL_CFG.minilm.onnxId, {
+          device: 'wasm',
+          dtype: 'q8',
+          progress_callback
+        });
+        return {
+          device: 'wasm',
+          embed: async (text) => (await extractor(text, { pooling: 'mean', normalize: true })).data // Float32Array(384)
+        };
+      }
+    };
+
+    const inflight = {};
+    window.loadEmbeddingModel = function (key) {
+      const cfg = MODEL_CFG[key];
+      if (!cfg || !LOADERS[key] || cfg.embed) return Promise.resolve();
+      if (inflight[key]) return inflight[key];
+
+      cfg.status = 'loading';
+      cfg.progress = 0;
+      if (window.activeModel === key) renderModelBadge();
+
+      const weightSuffix = key === 'gemma' ? '.onnx_data' : '.onnx';
+      const onProgress = (prog) => {
+        if (prog.status === 'progress' && prog.progress !== undefined && (!prog.file || prog.file.endsWith(weightSuffix))) {
+          cfg.progress = Math.round(prog.progress);
+          if (window.activeModel === key) renderModelBadge();
+        }
+      };
+
+      inflight[key] = LOADERS[key](onProgress)
+        .then(({ embed, device }) => {
+          cfg.embed = embed;
+          cfg.device = device.toUpperCase();
+          cfg.status = 'ready';
+          if (window.activeModel === key) {
+            renderModelBadge();
+            // Re-run current query through live in-browser ONNX model
+            executeQueryPipeline();
+          }
+        })
+        .catch((err) => {
+          console.warn(`Transformers.js ${cfg.badgeName} load error:`, err);
+          cfg.status = 'error'; // toggling back to this model retries the download
+          if (window.activeModel === key) {
+            renderModelBadge();
+            renderLiveMatchList();
+          }
+        })
+        .finally(() => {
+          delete inflight[key];
+        });
+      return inflight[key];
+    };
+
+    // Load the query encoder for whichever model is active (default: EmbeddingGemma-2)
+    window.loadEmbeddingModel(window.activeModel);
+  </script>
+</body>
+
+</html>
